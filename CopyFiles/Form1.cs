@@ -73,11 +73,13 @@ namespace CopyFiles {
             }
         }
 
-        Thread thread;
+        Thread thread, thread1;
         bool flag1 = false;
         private void ToChangeFile_Click(object sender, EventArgs e) {
             flag1 = true;
+            flag2 = true;
             thread.Abort();
+            thread1.Abort();
             using (FileStream stream = new FileStream("config.txt", FileMode.Truncate)) {
                 using (StreamWriter writer = new StreamWriter(stream)) { 
                     writer.WriteLine(path1);
@@ -137,6 +139,8 @@ namespace CopyFiles {
                         else {
                             flag1 = false;
                             thread = new Thread(new ThreadStart(WorkProgram));
+                            thread1 = new Thread(new ThreadStart(DeleteFiles));
+                            thread1.Start();
                             thread.Start();
                         }
                         
@@ -152,7 +156,29 @@ namespace CopyFiles {
             for (int i = 0; i < masWithOgr.Length; i++)
                 Expansion.Text += masWithOgr[i] + '\n';
         }
-        bool flag = false;
+
+        bool flag2 = false;
+        private void DeleteFiles() {
+            while (!flag2) {
+                FolderPerebor3(path2, path1);
+                flag = false;
+                FolderPerebor4(path4, path3);
+
+                if (InvokeRequired) {
+                    this.Invoke(new Action(() => Actions.SelectionStart = Actions.Text.Length));
+                    this.Invoke(new Action(() => Actions.ScrollToCaret()));
+                } else {
+                    Actions.SelectionStart = Actions.Text.Length;
+                    Actions.ScrollToCaret();
+                }
+
+
+                Thread.Sleep(30000);
+            }
+        }
+
+        bool flag = false; // верхняя папка
+        
         public void WorkProgram() {
             while (!flag1) {
                 FolderPerebor1(path1, path2);
@@ -281,11 +307,11 @@ namespace CopyFiles {
                     if (dir.Name == dir1.Name || dir.Name == dir2.Name)
                         continue;
                     if (Directory.Exists(end_dir + "\\" + dir.Name) != true) {
-                        Directory.Delete(end_dir + "\\" + dir.Name);
+                        Directory.Delete(begin_dir + "\\" + dir.Name);
                         if (InvokeRequired)
-                            this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + end_dir + ": " + '\n')));
+                            this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n')));
                         else
-                            Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + end_dir + ": " + '\n');
+                            Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n');
                     }
                     //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
                     FolderPerebor3(dir.FullName, end_dir + "\\" + dir.Name);
@@ -314,19 +340,19 @@ namespace CopyFiles {
                 } else {
                     if ((!CheckExtension(filik) || flagFull))
                         continue;
-                    //Копируем файл с перезаписью из источника в приёмник.
-                    File.Copy(file, end_dir + "\\" + filik, true);
+                    // Удаляем файл из папки B или каталога в папке B.
+                    File.Delete(file);
                     if (InvokeRequired)
-                        this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " скопирован в " + end_dir + ": " + '\n')));
+                        this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " удалён из " + begin_dir + ": " + '\n')));
                     else
-                        Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " скопирован в " + end_dir + ": " + '\n');
+                        Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " удалён из " + begin_dir + ": " + '\n');
 
                 }
             }
 
         }
 
-        // перебор папок которые надо будет удалить B --- A
+        // перебор папок которые надо будет удалить D --- C
         void FolderPerebor4(string begin_dir, string end_dir) {
             //Берём нашу исходную папку
             DirectoryInfo dir_inf = new DirectoryInfo(begin_dir);
@@ -337,9 +363,9 @@ namespace CopyFiles {
                     if (Directory.Exists(end_dir + "\\" + dir.Name) != true) {
                         Directory.Delete(end_dir + "\\" + dir.Name);
                         if (InvokeRequired)
-                            this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n')));
+                            this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n')));
                         else
-                            Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n');
+                            Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n');
                     }
                     //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
                     FolderPerebor4(dir.FullName, end_dir + "\\" + dir.Name);
@@ -360,9 +386,11 @@ namespace CopyFiles {
 
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e) {
-            if (thread != null) {
+            if (thread != null || thread1 != null) {
                 if (thread.IsAlive)
                     thread.Abort();
+                if (thread1.IsAlive)
+                    thread1.Abort();
             }
         }
     }
