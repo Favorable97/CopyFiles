@@ -30,7 +30,7 @@ namespace CopyFiles {
                 path1 = folderBrowserDialog.SelectedPath;
                 Path1.Text = path1;
             }
-                
+
         }
 
         private void Search2_Click(object sender, EventArgs e) {
@@ -81,7 +81,7 @@ namespace CopyFiles {
             thread.Abort();
             thread1.Abort();
             using (FileStream stream = new FileStream("config.txt", FileMode.Truncate)) {
-                using (StreamWriter writer = new StreamWriter(stream)) { 
+                using (StreamWriter writer = new StreamWriter(stream)) {
                     writer.WriteLine(path1);
                     writer.WriteLine(path2);
                     writer.WriteLine(path3);
@@ -99,118 +99,104 @@ namespace CopyFiles {
         }
         string[] parametrs;
         private void Form1_Load(object sender, EventArgs e) {
-            MessageBox.Show("Open");
-            try {
-                CheckPath();
-            } catch (Exception ex) { MessageBox.Show(ex.Message); }
-            
+            CheckPath();
         }
 
         void CheckPath() {
-            try {
-                if (path1 == "" && path2 == "" && path3 == "" && path4 == "" && path5 == "") {
-                    using (FileStream stream = new FileStream("config.txt", FileMode.Open)) {
-                        using (StreamReader reader = new StreamReader(stream, System.Text.Encoding.Default)) {
-                            string line = "";
-                            string str = "";
-                            while ((line = reader.ReadLine()) != null) {
-                                str += line + '\n';
-                            }
-                            parametrs = str.Split('\n');
-                            masWithOgr = new string[parametrs.Length - 6];
-                            string informText = "";
-                            for (int i = 0; i < parametrs.Length - 6; i++) {
-                                masWithOgr[i] = parametrs[i + 5];
-                            }
-                            if (Directory.Exists(parametrs[0])) {
-                                path1 = parametrs[0];
-                            } else informText += "1,";
-
-                            if (Directory.Exists(parametrs[1])) {
-                                path2 = parametrs[1];
-                            } else informText += "2,";
-                            if (Directory.Exists(parametrs[2])) {
-                                path3 = parametrs[2];
-                            } else informText += "3,";
-                            if (Directory.Exists(parametrs[3])) {
-                                path4 = parametrs[3];
-                            } else informText += "4,";
-                            if (Directory.Exists(parametrs[4])) {
-                                path5 = parametrs[4];
-                            } else informText += "5,";
-
-                            if (informText != "")
-                                MessageBox.Show("Неверные пути: " + informText.TrimEnd(','));
-                            else {
-                                flag1 = false;
-                                //thread = new Thread(new ThreadStart(WorkProgram));
-                                thread1 = new Thread(new ThreadStart(DeleteFiles));
-                                thread1.Start();
-                                //thread.Start();
-                            }
-
+            if (path1 == "" && path2 == "" && path3 == "" && path4 == "" && path5 == "") {
+                using (FileStream stream = new FileStream("config.txt", FileMode.Open)) {
+                    using (StreamReader reader = new StreamReader(stream, System.Text.Encoding.Default)) {
+                        string line = "";
+                        string str = "";
+                        while ((line = reader.ReadLine()) != null) {
+                            str += line + '\n';
                         }
+                        parametrs = str.Split('\n');
+                        masWithOgr = new string[parametrs.Length - 6];
+                        string informText = "";
+                        for (int i = 0; i < parametrs.Length - 6; i++) {
+                            masWithOgr[i] = parametrs[i + 5];
+                        }
+                        if (Directory.Exists(parametrs[0])) {
+                            path1 = parametrs[0];
+                        } else informText += "1,";
+
+                        if (Directory.Exists(parametrs[1])) {
+                            path2 = parametrs[1];
+                        } else informText += "2,";
+                        if (Directory.Exists(parametrs[2])) {
+                            path3 = parametrs[2];
+                        } else informText += "3,";
+                        if (Directory.Exists(parametrs[3])) {
+                            path4 = parametrs[3];
+                        } else informText += "4,";
+                        if (Directory.Exists(parametrs[4])) {
+                            path5 = parametrs[4];
+                        } else informText += "5,";
+
+                        if (informText != "")
+                            MessageBox.Show("Неверные пути: " + informText.TrimEnd(','));
+                        else {
+                            flag1 = false;
+                            thread = new Thread(new ThreadStart(WorkProgram));
+                            thread1 = new Thread(new ThreadStart(DeleteFiles));
+                            thread1.Start();
+                            thread.Start();
+                        }
+
                     }
                 }
-                Path1.Text = parametrs[0];
-                Path2.Text = parametrs[1];
-                Path3.Text = parametrs[2];
-                Path4.Text = parametrs[3];
-                Path5.Text = parametrs[4];
-                Expansion.Clear();
-                for (int i = 0; i < masWithOgr.Length; i++)
-                    Expansion.Text += masWithOgr[i] + '\n';
-            } catch (Exception ex) {
-                MessageBox.Show(ex.Message);
             }
-            
+            Path1.Text = parametrs[0];
+            Path2.Text = parametrs[1];
+            Path3.Text = parametrs[2];
+            Path4.Text = parametrs[3];
+            Path5.Text = parametrs[4];
+            Expansion.Clear();
+            for (int i = 0; i < masWithOgr.Length; i++)
+                Expansion.Text += masWithOgr[i] + '\n';
         }
 
         bool flag2 = false;
         private void DeleteFiles() {
-            try {
-                while (!flag2) {
-                    flag = false;
-                    FolderPerebor4(path4, path3);
+            while (!flag2) {
+                //FolderPerebor3(path2, path1);
+                flag = false;
+                FolderPerebor4(path4, path3);
 
-                    if (InvokeRequired) {
-                        this.Invoke(new Action(() => Actions.SelectionStart = Actions.Text.Length));
-                        this.Invoke(new Action(() => Actions.ScrollToCaret()));
-                    } else {
-                        Actions.SelectionStart = Actions.Text.Length;
-                        Actions.ScrollToCaret();
-                    }
-
-
-                    Thread.Sleep(30000);
+                if (InvokeRequired) {
+                    this.Invoke(new Action(() => Actions.SelectionStart = Actions.Text.Length));
+                    this.Invoke(new Action(() => Actions.ScrollToCaret()));
+                } else {
+                    Actions.SelectionStart = Actions.Text.Length;
+                    Actions.ScrollToCaret();
                 }
-            } catch (Exception ex) { MessageBox.Show(ex.Message); }
-            
+
+
+                Thread.Sleep(30000);
+            }
         }
 
         bool flag = false; // верхняя папка
-        
+
         public void WorkProgram() {
-            try {
-                while (!flag1) {
-                    FolderPerebor1(path1, path2);
-                    flag = false;
-                    FolderPerebor2(path3, path4);
+            while (!flag1) {
+                FolderPerebor1(path1, path2);
+                flag = false;
+                FolderPerebor2(path3, path4);
 
-                    if (InvokeRequired) {
-                        this.Invoke(new Action(() => Actions.SelectionStart = Actions.Text.Length));
-                        this.Invoke(new Action(() => Actions.ScrollToCaret()));
-                    } else {
-                        Actions.SelectionStart = Actions.Text.Length;
-                        Actions.ScrollToCaret();
-                    }
-
-
-                    Thread.Sleep(30000);
+                if (InvokeRequired) {
+                    this.Invoke(new Action(() => Actions.SelectionStart = Actions.Text.Length));
+                    this.Invoke(new Action(() => Actions.ScrollToCaret()));
+                } else {
+                    Actions.SelectionStart = Actions.Text.Length;
+                    Actions.ScrollToCaret();
                 }
-            } catch (Exception ex) { MessageBox.Show(ex.Message); }
-            
-            
+
+
+                Thread.Sleep(30000);
+            }
+
         }
 
         void FolderPerebor1(string begin_dir, string end_dir) {
@@ -230,12 +216,12 @@ namespace CopyFiles {
                             this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n')));
                         else
                             Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n');
-                    } 
+                    }
                     //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
                     FolderPerebor1(dir.FullName, end_dir + "\\" + dir.Name);
-                    
+
                 }
-                
+
                 //Перебираем файлы в папке источнике.
                 FilesPerebor(begin_dir, end_dir);
             } else {
@@ -262,10 +248,10 @@ namespace CopyFiles {
                         this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " скопирован в " + end_dir + ": " + '\n')));
                     else
                         Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " скопирован в " + end_dir + ": " + '\n');
-                    
+
                 }
             }
-            
+
         }
 
         bool CheckExtension(string filik) {
@@ -290,8 +276,8 @@ namespace CopyFiles {
                         if (InvokeRequired)
                             this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n')));
                         else
-                            Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " +  '\n');
-                    } 
+                            Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n');
+                    }
                     //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
                     FolderPerebor2(dir.FullName, end_dir + "\\" + dir.Name);
                 }
@@ -304,9 +290,9 @@ namespace CopyFiles {
                 flag = true;
                 FolderPerebor2(begin_dir, end_dir);
             }
-            
+
         }
-        
+
 
         // перебор папок которые надо будет удалить B --- A
         /*void FolderPerebor3(string begin_dir, string end_dir) {
@@ -329,9 +315,7 @@ namespace CopyFiles {
                     }
                     //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
                     FolderPerebor3(dir.FullName, end_dir + "\\" + dir.Name);
-
                 }
-
                 //Перебираем файлы в папке источнике.
                 FilesPerebor2(begin_dir, end_dir);
             } else {
@@ -354,7 +338,7 @@ namespace CopyFiles {
                 } else {
                     if ((!CheckExtension(filik) || flagFull))
                         continue;
-                    // Удаляем файл из папки D или каталога в папке D.
+                    // Удаляем файл из папки B или каталога в папке B.
                     File.Delete(file);
                     if (InvokeRequired)
                         this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " удалён из " + begin_dir + ": " + '\n')));
@@ -373,8 +357,6 @@ namespace CopyFiles {
             if (flag) {
                 //Перебираем все внутренние папки
                 foreach (DirectoryInfo dir in dir_inf.GetDirectories()) {
-                    if (Directory.Exists(begin_dir + "\\" + dir.Name) != true)
-                        break;
                     //Проверяем - если директории не существует, то создаем;
                     if (Directory.Exists(end_dir + "\\" + dir.Name) != true) {
                         Directory.Delete(begin_dir + "\\" + dir.Name, true);
@@ -382,15 +364,15 @@ namespace CopyFiles {
                             this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n')));
                         else
                             Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n');
-                        
-                        
+                    } else {
+                        FolderPerebor4(dir.FullName, end_dir + "\\" + dir.Name);
                     }
                     //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
-                    FolderPerebor4(dir.Parent.FullName, end_dir);
+                    //FolderPerebor4(dir.Parent.FullName, end_dir);
                 }
+
                 //Перебираем файлы в папке источнике.
-                //FilesPerebor2(begin_dir, end_dir);
-                
+                FilesPerebor2(begin_dir, end_dir);
             } else {
                 //Перебираем файлы в папке источнике.
                 FilesPerebor2(begin_dir, end_dir);
@@ -404,9 +386,9 @@ namespace CopyFiles {
 
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e) {
-            if (thread1 != null) {
-                /*if (thread.IsAlive)
-                    thread.Abort();*/
+            if (thread != null || thread1 != null) {
+                if (thread.IsAlive)
+                    thread.Abort();
                 if (thread1.IsAlive)
                     thread1.Abort();
             }
