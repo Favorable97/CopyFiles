@@ -200,57 +200,67 @@ namespace CopyFiles {
         }
 
         void FolderPerebor1(string begin_dir, string end_dir) {
-            //Берём нашу исходную папку
-            DirectoryInfo dir_inf = new DirectoryInfo(begin_dir);
-            DirectoryInfo dir1 = new DirectoryInfo(path4);
-            DirectoryInfo dir2 = new DirectoryInfo(path5);
-            if (flag) {
-                //Перебираем все внутренние папки
-                foreach (DirectoryInfo dir in dir_inf.GetDirectories()) {
-                    //Проверяем - если директории не существует, то создаем;
-                    if (dir.Name == dir1.Name || dir.Name == dir2.Name)
-                        continue;
-                    if (Directory.Exists(end_dir + "\\" + dir.Name) != true) {
-                        Directory.CreateDirectory(end_dir + "\\" + dir.Name);
-                        if (InvokeRequired)
-                            this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n')));
-                        else
-                            Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n');
+            try {
+                //Берём нашу исходную папку
+                DirectoryInfo dir_inf = new DirectoryInfo(begin_dir);
+                DirectoryInfo dir1 = new DirectoryInfo(path4);
+                DirectoryInfo dir2 = new DirectoryInfo(path5);
+                if (flag) {
+                    //Перебираем все внутренние папки
+                    foreach (DirectoryInfo dir in dir_inf.GetDirectories()) {
+                        //Проверяем - если директории не существует, то создаем;
+                        if (dir.Name == dir1.Name || dir.Name == dir2.Name)
+                            continue;
+                        if (Directory.Exists(end_dir + "\\" + dir.Name) != true) {
+                            Directory.CreateDirectory(end_dir + "\\" + dir.Name);
+                            if (InvokeRequired)
+                                this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n')));
+                            else
+                                Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n');
+                        }
+                        //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
+                        FolderPerebor1(dir.FullName, end_dir + "\\" + dir.Name);
+
                     }
-                    //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
-                    FolderPerebor1(dir.FullName, end_dir + "\\" + dir.Name);
 
+                    //Перебираем файлы в папке источнике.
+                    FilesPerebor(begin_dir, end_dir);
+                } else {
+                    //Перебираем файлы в папке источнике.
+                    FilesPerebor(begin_dir, end_dir);
+                    flag = true;
+                    FolderPerebor1(begin_dir, end_dir);
                 }
-
-                //Перебираем файлы в папке источнике.
-                FilesPerebor(begin_dir, end_dir);
-            } else {
-                //Перебираем файлы в папке источнике.
-                FilesPerebor(begin_dir, end_dir);
-                flag = true;
+            } catch (Exception) {
                 FolderPerebor1(begin_dir, end_dir);
             }
+            
         }
 
         void FilesPerebor(string begin_dir, string end_dir) {
-            foreach (string file in Directory.GetFiles(begin_dir)) {
-                //Определяем (отделяем) имя файла с расширением - без пути (но с слешем "\").
-                string filik = file.Substring(file.LastIndexOf('\\'), file.Length - file.LastIndexOf('\\'));
-                bool flagFull = masWithOgr.Length > 0 ? false : true;
-                if (File.Exists(end_dir + "\\" + filik) == true && File.GetLastWriteTime(end_dir + "\\" + filik) == File.GetLastWriteTime(file)) {
-                    continue;
-                } else {
-                    if ((!CheckExtension(filik) || flagFull))
+            try {
+                foreach (string file in Directory.GetFiles(begin_dir)) {
+                    //Определяем (отделяем) имя файла с расширением - без пути (но с слешем "\").
+                    string filik = file.Substring(file.LastIndexOf('\\'), file.Length - file.LastIndexOf('\\'));
+                    bool flagFull = masWithOgr.Length > 0 ? false : true;
+                    if (File.Exists(end_dir + "\\" + filik) == true && File.GetLastWriteTime(end_dir + "\\" + filik) == File.GetLastWriteTime(file)) {
                         continue;
-                    //Копируем файл с перезаписью из источника в приёмник.
-                    File.Copy(file, end_dir + "\\" + filik, true);
-                    if (InvokeRequired)
-                        this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " скопирован в " + end_dir + ": " + '\n')));
-                    else
-                        Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " скопирован в " + end_dir + ": " + '\n');
+                    } else {
+                        if ((!CheckExtension(filik) || flagFull))
+                            continue;
+                        //Копируем файл с перезаписью из источника в приёмник.
+                        File.Copy(file, end_dir + "\\" + filik, true);
+                        if (InvokeRequired)
+                            this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " скопирован в " + end_dir + ": " + '\n')));
+                        else
+                            Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " скопирован в " + end_dir + ": " + '\n');
 
+                    }
                 }
+            } catch (Exception) {
+                FilesPerebor(begin_dir, end_dir);
             }
+            
 
         }
 
@@ -265,31 +275,36 @@ namespace CopyFiles {
         }
 
         void FolderPerebor2(string begin_dir, string end_dir) {
-            //Берём нашу исходную папку
-            DirectoryInfo dir_inf = new DirectoryInfo(begin_dir);
-            if (flag) {
-                //Перебираем все внутренние папки
-                foreach (DirectoryInfo dir in dir_inf.GetDirectories()) {
-                    //Проверяем - если директории не существует, то создаем;
-                    if (Directory.Exists(end_dir + "\\" + dir.Name) != true) {
-                        Directory.CreateDirectory(end_dir + "\\" + dir.Name);
-                        if (InvokeRequired)
-                            this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n')));
-                        else
-                            Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n');
+            try {
+                //Берём нашу исходную папку
+                DirectoryInfo dir_inf = new DirectoryInfo(begin_dir);
+                if (flag) {
+                    //Перебираем все внутренние папки
+                    foreach (DirectoryInfo dir in dir_inf.GetDirectories()) {
+                        //Проверяем - если директории не существует, то создаем;
+                        if (Directory.Exists(end_dir + "\\" + dir.Name) != true) {
+                            Directory.CreateDirectory(end_dir + "\\" + dir.Name);
+                            if (InvokeRequired)
+                                this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n')));
+                            else
+                                Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " создана в " + end_dir + ": " + '\n');
+                        }
+                        //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
+                        FolderPerebor2(dir.FullName, end_dir + "\\" + dir.Name);
                     }
-                    //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
-                    FolderPerebor2(dir.FullName, end_dir + "\\" + dir.Name);
-                }
 
-                //Перебираем файлы в папке источнике.
-                FilesPerebor(begin_dir, end_dir);
-            } else {
-                //Перебираем файлы в папке источнике.
-                FilesPerebor(begin_dir, end_dir);
-                flag = true;
+                    //Перебираем файлы в папке источнике.
+                    FilesPerebor(begin_dir, end_dir);
+                } else {
+                    //Перебираем файлы в папке источнике.
+                    FilesPerebor(begin_dir, end_dir);
+                    flag = true;
+                    FolderPerebor2(begin_dir, end_dir);
+                }
+            } catch (Exception) {
                 FolderPerebor2(begin_dir, end_dir);
             }
+            
 
         }
 
@@ -329,56 +344,66 @@ namespace CopyFiles {
 
         // перебор файлов для удаления
         void FilesPerebor2(string begin_dir, string end_dir) {
-            foreach (string file in Directory.GetFiles(begin_dir)) {
-                //Определяем (отделяем) имя файла с расширением - без пути (но с слешем "\").
-                string filik = file.Substring(file.LastIndexOf('\\'), file.Length - file.LastIndexOf('\\'));
-                bool flagFull = masWithOgr.Length > 0 ? false : true;
-                if (File.Exists(end_dir + "\\" + filik) == true && File.GetLastWriteTime(end_dir + "\\" + filik) == File.GetLastWriteTime(file)) {
-                    continue;
-                } else {
-                    if ((!CheckExtension(filik) || flagFull))
+            try {
+                foreach (string file in Directory.GetFiles(begin_dir)) {
+                    //Определяем (отделяем) имя файла с расширением - без пути (но с слешем "\").
+                    string filik = file.Substring(file.LastIndexOf('\\'), file.Length - file.LastIndexOf('\\'));
+                    bool flagFull = masWithOgr.Length > 0 ? false : true;
+                    if (File.Exists(end_dir + "\\" + filik) == true && File.GetLastWriteTime(end_dir + "\\" + filik) == File.GetLastWriteTime(file)) {
                         continue;
-                    // Удаляем файл из папки B или каталога в папке B.
-                    File.Delete(file);
-                    if (InvokeRequired)
-                        this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " удалён из " + begin_dir + ": " + '\n')));
-                    else
-                        Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " удалён из " + begin_dir + ": " + '\n');
+                    } else {
+                        if ((!CheckExtension(filik) || flagFull))
+                            continue;
+                        // Удаляем файл из папки B или каталога в папке B.
+                        File.Delete(file);
+                        if (InvokeRequired)
+                            this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " удалён из " + begin_dir + ": " + '\n')));
+                        else
+                            Actions.AppendText(DateTime.Now + ": Файл " + filik.TrimStart('\\') + " удалён из " + begin_dir + ": " + '\n');
 
+                    }
                 }
+            } catch (Exception) {
+                FilesPerebor2(begin_dir, end_dir);
             }
+            
 
         }
 
         // перебор папок которые надо будет удалить D --- C
         void FolderPerebor4(string begin_dir, string end_dir) {
-            //Берём нашу исходную папку
-            DirectoryInfo dir_inf = new DirectoryInfo(begin_dir);
-            if (flag) {
-                //Перебираем все внутренние папки
-                foreach (DirectoryInfo dir in dir_inf.GetDirectories()) {
-                    //Проверяем - если директории не существует, то создаем;
-                    if (Directory.Exists(end_dir + "\\" + dir.Name) != true) {
-                        Directory.Delete(begin_dir + "\\" + dir.Name, true);
-                        if (InvokeRequired)
-                            this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n')));
-                        else
-                            Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n');
-                    } else {
-                        FolderPerebor4(dir.FullName, end_dir + "\\" + dir.Name);
+            try {
+                //Берём нашу исходную папку
+                DirectoryInfo dir_inf = new DirectoryInfo(begin_dir);
+                if (flag) {
+                    //Перебираем все внутренние папки
+                    foreach (DirectoryInfo dir in dir_inf.GetDirectories()) {
+                        //Проверяем - если директории не существует, то создаем;
+                        if (Directory.Exists(end_dir + "\\" + dir.Name) != true) {
+                            Directory.Delete(begin_dir + "\\" + dir.Name, true);
+                            if (InvokeRequired)
+                                this.Invoke(new Action(() => Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n')));
+                            else
+                                Actions.AppendText(DateTime.Now + ": Папка " + dir.Name + " удалена из " + begin_dir + ": " + '\n');
+                        } else {
+                            FolderPerebor4(dir.FullName, end_dir + "\\" + dir.Name);
+                        }
+                        //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
+                        //FolderPerebor4(dir.Parent.FullName, end_dir);
                     }
-                    //Рекурсия (перебираем вложенные папки и делаем для них то-же самое).
-                    //FolderPerebor4(dir.Parent.FullName, end_dir);
-                }
 
-                //Перебираем файлы в папке источнике.
-                FilesPerebor2(begin_dir, end_dir);
-            } else {
-                //Перебираем файлы в папке источнике.
-                FilesPerebor2(begin_dir, end_dir);
-                flag = true;
+                    //Перебираем файлы в папке источнике.
+                    FilesPerebor2(begin_dir, end_dir);
+                } else {
+                    //Перебираем файлы в папке источнике.
+                    FilesPerebor2(begin_dir, end_dir);
+                    flag = true;
+                    FolderPerebor4(begin_dir, end_dir);
+                }
+            } catch (Exception) {
                 FolderPerebor4(begin_dir, end_dir);
             }
+            
 
         }
 
